@@ -1,10 +1,20 @@
 package com.jjdx.xoj.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.jjdx.xoj.model.entity.FileRecord;
+import com.jjdx.xoj.model.dto.question.JudgeCase;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * 文件记录服务
  */
-public interface FileRecordService extends IService<FileRecord> {
+public interface FileRecordService  {
+
+    boolean uploadAvatar(MultipartFile file, Long userId);
+
+    byte[] getAvatar(Long userId);
+
+    boolean uploadJudgecase(Long questionId, MultipartFile[] inputFiles, MultipartFile[] outputFiles );
+
+    List<JudgeCase> getJudgecase(Long questionId);
 }

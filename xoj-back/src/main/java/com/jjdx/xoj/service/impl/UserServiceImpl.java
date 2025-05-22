@@ -15,7 +15,6 @@ import com.jjdx.xoj.model.vo.UserVO;
 import com.jjdx.xoj.service.UserService;
 import com.jjdx.xoj.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -27,8 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.jjdx.xoj.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  用户服务实现
@@ -106,42 +103,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return this.getLoginUserVO(user);
     }
 
-    @Override
-    public LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request) {
-        String unionId = wxOAuth2UserInfo.getUnionId();
-        String mpOpenId = wxOAuth2UserInfo.getOpenid();
-        // 单机锁
-        synchronized (unionId.intern()) {
-            // 查询用户是否已存在
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("unionId", unionId);
-            User user = this.getOne(queryWrapper);
-            // 被封号，禁止登录
-            if (user != null && UserRoleEnum.BAN.getValue().equals(user.getUserRole())) {
-                throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "该用户已被封，禁止登录");
-            }
-            // 用户不存在则创建
-            if (user == null) {
-                user = new User();
-                user.setUnionId(unionId);
-                user.setMpOpenId(mpOpenId);
-                user.setUserAvatar(wxOAuth2UserInfo.getHeadImgUrl());
-                user.setUserName(wxOAuth2UserInfo.getNickname());
-                boolean result = this.save(user);
-                if (!result) {
-                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败");
-                }
-            }
-            // 记录用户的登录态
-            request.getSession().setAttribute(USER_LOGIN_STATE, user);
-            return getLoginUserVO(user);
-        }
-    }
 
     /**
      获取当前登录用户
@@ -150,7 +114,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      @return 未登录则返回null
      */
     @Override
-    public  User getLoginUserNullable(HttpServletRequest request) {
+    public User getLoginUserNullable(HttpServletRequest request) {
         // 先判断是否已登录
         Object userId = request.getAttribute("userId");
         if (userId == null) {
@@ -192,8 +156,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
+        User user = getLoginUser(request);
         return isAdmin(user);
     }
 
@@ -209,19 +172,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
-        }
-        // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        // TODO
         return true;
     }
 
     @Override
     public LoginUserVO getLoginUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
+        if (user == null) return null;
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
         return loginUserVO;
@@ -229,9 +186,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserVO getUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
+        if (user == null) return null;
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         return userVO;
@@ -268,5 +223,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public Long getUserAvatarVersion(Long userId) {
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        }
+        Long userAvatarVersion = user.getUserAvatarVersion();
+        if (userAvatarVersion == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户未设置头像");
+        }
+        return userAvatarVersion;
+    }
+
+    @Override
+    public Long getUserAvatarVersionNullable(Long userId) {
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        }
+        return user.getUserAvatarVersion();
     }
 }

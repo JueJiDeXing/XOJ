@@ -3,13 +3,11 @@ package com.jjdx.xoj.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jjdx.xoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
-import com.jjdx.xoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
+import com.jjdx.xoj.model.dto.questionSubmit.QuestionSubmitAddRequest;
+import com.jjdx.xoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.jjdx.xoj.model.entity.QuestionSubmit;
 import com.jjdx.xoj.model.entity.User;
 import com.jjdx.xoj.model.vo.QuestionSubmitVO;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  @author 34084

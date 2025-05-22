@@ -3,89 +3,96 @@ package com.jjdx.xoj.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
 import lombok.Data;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import java.util.Date;
 
 /**
- * 题目
- * @TableName question
- */
-@TableName(value ="question")
+ 题目
+
+ @TableName question */
+@TableName(value = "question")
+@Document(indexName = "question_index")
 @Data
 public class Question {
     /**
-     * id
+     id
      */
     @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 标题
+     标题
      */
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String title;
 
     /**
-     * 内容
+     内容
      */
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String content;
 
     /**
-     * 标签(json数组)
+     标签(json数组)
      */
     private String tagList;
 
     /**
-     * 标准答案
+     标准答案
      */
     private String answer;
 
     /**
-     * 提交数
+     提交数
      */
     private Integer submitNum;
 
     /**
-     * 通过数
+     通过数
      */
     private Integer acceptNum;
 
     /**
-     * 判题用例(json数组)
+     测试用例版本号(时间戳)
      */
-    private String judgeCaseList;
+    private Long judgeCaseVersion;
 
     /**
-     * 判题配置(json对象)
+     判题配置(json对象)
      */
     private String judgeConfig;
 
     /**
-     * 点赞数
+     点赞数
      */
     private Integer thumbNum;
 
     /**
-     * 收藏数
+     收藏数
      */
     private Integer favourNum;
 
     /**
-     * 创建用户id
+     创建用户id
      */
     private Long userId;
 
     /**
-     * 创建时间
+     创建时间
      */
     private Date createTime;
 
     /**
-     * 更新时间
+     更新时间
      */
     private Date updateTime;
 
     /**
-     * 是否删除
+     是否删除
      */
     private Integer isDelete;
 }

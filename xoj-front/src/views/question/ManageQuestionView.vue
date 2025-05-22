@@ -48,10 +48,10 @@
         </a-tooltip>
       </template>
 
-      <template #judgeCaseList="{ record }">
-        <a-tooltip :content="record.judgeCaseList" position="top">
-          <div class="ellipsis-text" :title="JSON.stringify(record.judgeCaseList)">
-            {{ record.judgeCaseList }}
+      <template #judgeCaseVersion="{ record }">
+        <a-tooltip :content="record.judgeCaseVersion" position="top">
+          <div class="ellipsis-text" :title="JSON.stringify(record.judgeCaseVersion)">
+            {{ record.judgeCaseVersion }}
           </div>
         </a-tooltip>
 
@@ -153,11 +153,11 @@ const columns = [
     slotName: 'judgeConfig'
   },
   {
-    title: '测试用例',
-    dataIndex: 'judgeCaseList',
+    title: '测试用例版本号',
+    dataIndex: 'judgeCaseVersion',
     width: 150,
     ellipsis: true,
-    slotName: 'judgeCaseList'
+    slotName: 'judgeCaseVersion'
   },
   {
     title: '提交数',

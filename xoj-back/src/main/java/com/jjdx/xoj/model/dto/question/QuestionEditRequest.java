@@ -6,47 +6,41 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 编辑请求
- *
-
+ 编辑请求
  */
 @Data
 public class QuestionEditRequest implements Serializable {
 
     /**
-     * id
+     id
      */
     private Long id;
 
     /**
-     * 标题
+     标题
      */
     private String title;
 
     /**
-     * 内容
+     内容
      */
     private String content;
 
     /**
-     * 标签
+     标签
      */
     private List<String> tagList;
 
     /**
-     * 标准答案
+     标准答案
      */
     private String answer;
 
-    /**
-     判题用例
-     */
-    private List<JudgeCase> judgeCaseList;
 
     /**
      判题配置
      */
-    private  JudgeConfig  judgeConfig;
+    private JudgeConfig judgeConfig;
 
 
     private static final long serialVersionUID = 1L;

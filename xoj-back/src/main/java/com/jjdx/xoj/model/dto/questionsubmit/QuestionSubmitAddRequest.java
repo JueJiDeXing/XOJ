@@ -1,4 +1,4 @@
-package com.jjdx.xoj.model.dto.questionsubmit;
+package com.jjdx.xoj.model.dto.questionSubmit;
 
 import lombok.Data;
 

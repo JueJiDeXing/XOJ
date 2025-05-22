@@ -72,7 +72,9 @@ import {useStore} from "vuex";
 import checkAccess from "@/access/checkAccess";
 import AccessEnum from "@/access/accessEnum";
 import UserCardPopover from "@/components/GlobalHeader/UserCardPopover.vue";
-import getImage_base64 from "@/commonTs/getImage_base64";
+
+import {FileRecordControllerService} from "../../../generated";
+import message from "@arco-design/web-vue/es/message";
 
 const selectedKeys = ref(["/"]);
 const router = useRouter();
@@ -109,6 +111,15 @@ const visibleRoutes = computed(() => {
 });
 
 
+const fetchAvatar = async (avatarUrl: ref<string>) => {
+  const res = await FileRecordControllerService.getAvatarUsingGet();
+  if (res.code !== 0) {
+    message.error('头像获取失败: ' + res.message)
+    return;
+  }
+  avatarUrl.value = `data:image/png;base64,${res.data}`
+}
+
 function loginOut() {
   console.log("退出登录");
   localStorage.removeItem('token');
@@ -127,11 +138,7 @@ function toRegister() {
   router.push({path: "/user/register"});
 }
 
-getImage_base64(store.state.user.loginUser.userAvatar).then((base64Image) => {
-  avatarUrl.value = base64Image;
-}).catch((err) => {
-  console.error('获取头像失败:', err);
-});
+fetchAvatar(avatarUrl);
 
 </script>
 

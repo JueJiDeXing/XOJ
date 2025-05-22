@@ -112,9 +112,6 @@ public class UserController {
     @GetMapping("/get/login")
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
         User user = userService.getLoginUser(request);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户不存在");
-        }
         return ResultUtils.success(userService.getLoginUserVO(user));
     }
 
@@ -137,8 +134,10 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userAddRequest, user);
-        boolean result = userService.save(user);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        boolean update = userService.save(user);
+        if (!update) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "添加用户失败");
+        }
         return ResultUtils.success(user.getId());
     }
 
@@ -152,11 +151,15 @@ public class UserController {
     @PostMapping("/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+        if (deleteRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean b = userService.removeById(deleteRequest.getId());
-        return ResultUtils.success(b);
+        long userId = deleteRequest.getId();
+        if (userId < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean remove = userService.removeById(userId);
+        return ResultUtils.success(remove);
     }
 
     /**
@@ -175,8 +178,10 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
-        boolean result = userService.updateById(user);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        boolean update = userService.updateById(user);
+        if (!update) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "添加用户失败");
+        }
         return ResultUtils.success(true);
     }
 
@@ -194,7 +199,9 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.getById(id);
-        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
         return ResultUtils.success(user);
     }
 
@@ -274,9 +281,12 @@ public class UserController {
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());
-        boolean result = userService.updateById(user);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        boolean update = userService.updateById(user);
+        if (!update) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "更新失败");
+        }
         return ResultUtils.success(true);
     }
+
 
 }

@@ -35,7 +35,7 @@ public class QuestionVO implements Serializable {
     /**
      标签
      */
-    private List<String> tags;
+    private List<String> tagList;
 
     /**
      提交数
@@ -51,7 +51,6 @@ public class QuestionVO implements Serializable {
      判题配置
      */
     private JudgeConfig judgeConfig;
-
 
     /**
      点赞数
@@ -85,13 +84,13 @@ public class QuestionVO implements Serializable {
         Question question = new Question();
         BeanUtils.copyProperties(questionVO, question);
 
-        List<String> tags = questionVO.getTags();
-        if (tags != null) {
-            question.setTagList(GSON.toJson(tags));
+        List<String> tagList = questionVO.getTagList();
+        if (tagList != null) {
+            question.setTagList(GSON.toJson(tagList));
         }
         JudgeConfig judgeConfig = questionVO.getJudgeConfig();
         if (judgeConfig != null) {
-            question.setJudgeCaseList(GSON.toJson(judgeConfig));
+            question.setJudgeConfig(GSON.toJson(judgeConfig));
         }
         return question;
     }
@@ -109,8 +108,8 @@ public class QuestionVO implements Serializable {
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
 
-        List<String> tags = GSON.fromJson(question.getTagList(), new TypeToken<List<String>>() {}.getType());
-        questionVO.setTags(tags);
+        List<String> tagList = GSON.fromJson(question.getTagList(), new TypeToken<List<String>>() {}.getType());
+        questionVO.setTagList(tagList);
 
         JudgeConfig judgeConfig = GSON.fromJson(question.getJudgeConfig(), JudgeConfig.class);
         questionVO.setJudgeConfig(judgeConfig);

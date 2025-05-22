@@ -11,19 +11,21 @@ import com.jjdx.xoj.exception.BusinessException;
 import com.jjdx.xoj.exception.ThrowUtils;
 import com.jjdx.xoj.interceptor.aop.annotation.AuthCheck;
 import com.jjdx.xoj.model.dto.question.*;
-import com.jjdx.xoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
-import com.jjdx.xoj.model.dto.questionsubmit.QuestionSubmitGetRequest;
-import com.jjdx.xoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
+import com.jjdx.xoj.model.dto.questionSubmit.QuestionSubmitAddRequest;
+import com.jjdx.xoj.model.dto.questionSubmit.QuestionSubmitGetRequest;
+import com.jjdx.xoj.model.dto.questionSubmit.QuestionSubmitQueryRequest;
 import com.jjdx.xoj.model.entity.Question;
 import com.jjdx.xoj.model.entity.QuestionSubmit;
 import com.jjdx.xoj.model.entity.User;
 import com.jjdx.xoj.model.enums.UserRoleEnum;
 import com.jjdx.xoj.model.vo.QuestionSubmitVO;
 import com.jjdx.xoj.model.vo.QuestionVO;
+import com.jjdx.xoj.service.Es.QuestionEsService;
 import com.jjdx.xoj.service.QuestionService;
 import com.jjdx.xoj.service.QuestionSubmitService;
 import com.jjdx.xoj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,6 +51,9 @@ public class QuestionController {
     @Resource
     private QuestionSubmitService questionSubmitService;
 
+    @Resource
+    private QuestionEsService questionEsService;
+
 
     private final static Gson GSON = new Gson();
 
@@ -68,13 +73,9 @@ public class QuestionController {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionAddRequest, question);
-        List<String> tags = questionAddRequest.getTags();
-        if (tags != null) {
-            question.setTagList(GSON.toJson(tags));
-        }
-        List<JudgeCase> judgeCaseList = questionAddRequest.getJudgeCaseList();
-        if (judgeCaseList != null) {
-            question.setJudgeCaseList(GSON.toJson(judgeCaseList));
+        List<String> tagList = questionAddRequest.getTagList();
+        if (tagList != null) {
+            question.setTagList(GSON.toJson(tagList));
         }
         JudgeConfig judgeConfig = questionAddRequest.getJudgeConfig();
         if (judgeConfig != null) {
@@ -108,7 +109,9 @@ public class QuestionController {
         long id = deleteRequest.getId();
         // 判断是否存在
         Question oldQuestion = questionService.getById(id);
-        ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
+        if (oldQuestion == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目不存在");
+        }
         // 仅本人或管理员可删除
         if (!oldQuestion.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
@@ -134,10 +137,6 @@ public class QuestionController {
         List<String> tagList = questionUpdateRequest.getTagList();
         if (tagList != null) {
             question.setTagList(GSON.toJson(tagList));
-        }
-        List<JudgeCase> judgeCase = questionUpdateRequest.getJudgeCaseList();
-        if (judgeCase != null) {
-            question.setJudgeCaseList(GSON.toJson(judgeCase));
         }
         JudgeConfig judgeConfig = questionUpdateRequest.getJudgeConfig();
         if (judgeConfig != null) {
@@ -201,8 +200,14 @@ public class QuestionController {
         long size = questionQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<Question> questionPage = questionService.page(new Page<>(current, size),
-                questionService.getQueryWrapper(questionQueryRequest));
+
+        Page<Question> questionPage;
+        if (StringUtils.isNotBlank(questionQueryRequest.getTitle())) {// 题目名称查询
+            questionPage = questionEsService.searchFromEs(questionQueryRequest);
+        } else { // 常规查询
+            questionPage = questionService.page(new Page<>(current, size),
+                    questionService.getQueryWrapper(questionQueryRequest));
+        }
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
 
@@ -238,13 +243,9 @@ public class QuestionController {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionEditRequest, question);
-        List<String> tags = questionEditRequest.getTagList();
-        if (tags != null) {
-            question.setTagList(GSON.toJson(tags));
-        }
-        List<JudgeCase> judgeCase = questionEditRequest.getJudgeCaseList();
-        if (judgeCase != null) {
-            question.setJudgeCaseList(GSON.toJson(judgeCase));
+        List<String> tagList = questionEditRequest.getTagList();
+        if (tagList != null) {
+            question.setTagList(GSON.toJson(tagList));
         }
         JudgeConfig judgeConfig = questionEditRequest.getJudgeConfig();
         if (judgeConfig != null) {
@@ -273,7 +274,7 @@ public class QuestionController {
      @param request
      @return submitId 提交id
      */
-    @PostMapping("//question_submit")
+    @PostMapping("/question_submit")
     public BaseResponse<Long> doSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest, HttpServletRequest request) {
         if (questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -320,4 +321,5 @@ public class QuestionController {
 
         return ResultUtils.success(questionSubmitService.getQuestionSubmitVOPage(questionSubmitPage));
     }
+
 }

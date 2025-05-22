@@ -35,10 +35,6 @@ public class QuestionUpdateRequest implements Serializable {
      */
     private String answer;
 
-    /**
-     判题用例
-     */
-    private List<JudgeCase> judgeCaseList;
 
     /**
      判题配置

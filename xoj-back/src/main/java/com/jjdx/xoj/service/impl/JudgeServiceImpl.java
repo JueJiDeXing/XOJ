@@ -13,9 +13,11 @@ import com.jjdx.xoj.model.entity.Question;
 import com.jjdx.xoj.model.entity.QuestionSubmit;
 import com.jjdx.xoj.model.enums.JudgeInfoMessageEnum;
 import com.jjdx.xoj.model.enums.QuestionSubmitStatusEnum;
+import com.jjdx.xoj.service.FileRecordService;
 import com.jjdx.xoj.service.JudgeService;
 import com.jjdx.xoj.service.QuestionService;
 import com.jjdx.xoj.service.QuestionSubmitService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,12 +28,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class JudgeServiceImpl implements JudgeService {
     @Resource
     private QuestionService questionService;
+
     @Resource
     private QuestionSubmitService questionSubmitService;
+
+    @Resource
+    private FileRecordService fileRecordService;
+
     @Value("${codesandbox.defaultType}")
     String codeSandBoxType;
 
@@ -40,18 +48,20 @@ public class JudgeServiceImpl implements JudgeService {
         // 获取并验证提交信息和题目信息
         QuestionSubmit questionSubmit = validateAndGetQuestionSubmit(questionSubmitId);
         Question question = validateAndGetQuestion(questionSubmit.getQuestionId());
-
+        log.info("[判题模块]检验提交信息和题目信息完成");
         // 更新判题状态为运行中
         updateQuestionSubmitStatusToRunning(questionSubmitId);
+        log.info("[判题模块]已更改为'判题中',准备判题");
         try {
             // 执行代码沙箱
             ExecuteCodeResponse executeCodeResponse = executeCodeSandbox(questionSubmit, question);
+            log.info("[判题模块]代码沙箱执行完成,准备处理判题结果");
             // 处理判题结果
             return processJudgeResult(questionSubmitId, question, executeCodeResponse);
         } catch (Exception e) {
-            // 处理系统异常
-            handleJudgeException(questionSubmitId);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "判题系统异常");
+            log.error("[判题模块]判题系统异常{}", e.getMessage());
+            handleJudgeException(questionSubmitId,e.getMessage());  // 处理系统异常
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "判题系统异常 ");
         }
     }
 
@@ -93,9 +103,10 @@ public class JudgeServiceImpl implements JudgeService {
     private ExecuteCodeResponse executeCodeSandbox(QuestionSubmit questionSubmit, Question question) {
         String language = questionSubmit.getLanguage();
         String code = questionSubmit.getCode();
-        List<JudgeCase> judgeCaseList = JSONUtil.toList(question.getJudgeCaseList(), JudgeCase.class);
-        List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
 
+        // 从文件系统获取测试用例
+        List<JudgeCase> judgeCaseList = fileRecordService.getJudgecase(question.getId());
+        List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
         CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(codeSandBoxType);
         codeSandbox = new CodeSandboxProxy(codeSandbox);
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
@@ -105,8 +116,10 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     private QuestionSubmit processJudgeResult(long questionSubmitId, Question question, ExecuteCodeResponse executeCodeResponse) {
-        List<JudgeCase> judgeCaseList = JSONUtil.toList(question.getJudgeCaseList(), JudgeCase.class);
+        // 从文件系统获取测试用例
+        List<JudgeCase> judgeCaseList = fileRecordService.getJudgecase(question.getId());
         List<String> outputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
+
         JudgeConfig judgeConfig = JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
 
         List<JudgeInfo> judgeInfoList = handleExecuteResponse(executeCodeResponse, outputList, judgeConfig, judgeCaseList.size());
@@ -236,11 +249,17 @@ public class JudgeServiceImpl implements JudgeService {
         return info;
     }
 
-    private void handleJudgeException(long questionSubmitId) {
+    private void handleJudgeException(long questionSubmitId,String errorMessage) {
         QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
         questionSubmitUpdate.setId(questionSubmitId);
         questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED);
         questionSubmitUpdate.setJudgeResult(JudgeInfoMessageEnum.SYSTEM_ERROR);
+        List<JudgeInfo> judgeInfoList = new ArrayList<>();
+        JudgeInfo judgeInfo = new JudgeInfo();
+        judgeInfo.setJudgeCaseResult(JudgeInfoMessageEnum.SYSTEM_ERROR);
+        judgeInfo.setErrorMessage(errorMessage);
+        judgeInfoList.add(judgeInfo);
+        questionSubmitUpdate.setJudgeInfoList(JSONUtil.toJsonStr(judgeInfoList));
         questionSubmitService.updateById(questionSubmitUpdate);
     }
 
@@ -268,6 +287,9 @@ public class JudgeServiceImpl implements JudgeService {
         // 优先级从高到低排序
         for (JudgeInfo info : judgeInfoList) {
             String result = info.getJudgeCaseResult();
+            if (JudgeInfoMessageEnum.SYSTEM_ERROR.getValue().equals(result)) {
+                return JudgeInfoMessageEnum.SYSTEM_ERROR;
+            }
             if (JudgeInfoMessageEnum.RUNTIME_ERROR.getValue().equals(result)) {
                 return JudgeInfoMessageEnum.RUNTIME_ERROR;
             }
@@ -279,9 +301,6 @@ public class JudgeServiceImpl implements JudgeService {
             }
             if (JudgeInfoMessageEnum.WRONG_ANSWER.getValue().equals(result)) {
                 return JudgeInfoMessageEnum.WRONG_ANSWER;
-            }
-            if (JudgeInfoMessageEnum.SYSTEM_ERROR.getValue().equals(result)) {
-                return JudgeInfoMessageEnum.SYSTEM_ERROR;
             }
         }
         // 所有用例都通过

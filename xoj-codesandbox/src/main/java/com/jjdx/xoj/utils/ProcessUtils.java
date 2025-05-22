@@ -12,6 +12,7 @@ import static com.jjdx.xoj.codeSandbox.JavaCodeSandboxTemplate.Time_Out;
 
 
 public class ProcessUtils {
+    private ProcessUtils() {}
 
     public static ExecuteMessage runInterAndGetMessage(Process process, String input) throws Exception {
         ExecuteMessage executeMessage = new ExecuteMessage();

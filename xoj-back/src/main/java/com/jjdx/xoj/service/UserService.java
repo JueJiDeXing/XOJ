@@ -6,12 +6,12 @@ import com.jjdx.xoj.model.dto.user.UserQueryRequest;
 import com.jjdx.xoj.model.entity.User;
 import com.jjdx.xoj.model.vo.LoginUserVO;
 import com.jjdx.xoj.model.vo.UserVO;
-import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Set;
 
 /**
  用户服务
@@ -38,14 +38,6 @@ public interface UserService extends IService<User> {
      */
     LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
-    /**
-     用户登录（微信开放平台）
-
-     @param wxOAuth2UserInfo 从微信获取的用户信息
-     @param request
-     @return 脱敏后的用户信息
-     */
-    LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request);
 
     /**
      获取当前登录用户
@@ -53,8 +45,8 @@ public interface UserService extends IService<User> {
      @param request
      @return 未登录则报错
      */
-   @NotNull
-   User getLoginUser(HttpServletRequest request);
+    @NotNull
+    User getLoginUser(HttpServletRequest request);
 
     /**
      获取当前登录用户
@@ -120,5 +112,12 @@ public interface UserService extends IService<User> {
      @return
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    /**
+     获取用户头像版本号
+     */
+    Long getUserAvatarVersion(Long userId);
+
+    Long getUserAvatarVersionNullable(Long userId);
 
 }

@@ -2,6 +2,7 @@ package com.jjdx.xoj.utils;
 
 /*
 禁止库:
+sun.misc.Unsafe
 java.nio.*
 java.net.*
 java.lang.reflect.*
@@ -12,7 +13,6 @@ java.sql.*
 java.rmi.*
 java.awt.*
 javax.swing.*
-
 允许库:
 java.util.*
 java.io.*
@@ -29,14 +29,14 @@ import java.util.regex.Pattern;
  代码校验 (文件交互、命令执行、网络、反射、进程等操作禁止)
  */
 public class JavaCodeValidator {
-
+    private JavaCodeValidator() {}
 
     private static final List<Pattern> FORBIDDEN_PATTERNS = new ArrayList<>();
 
     static {
         // 禁止的import语句
         FORBIDDEN_PATTERNS.add(Pattern.compile(
-                "^\\s*import\\s+(static\\s+)?(java\\.nio\\..*|java\\.net\\..*|java\\.lang\\.reflect\\..*|java\\.lang\\.ProcessBuilder|javax\\.script\\..*|javax\\.xml\\..*|java\\.sql\\..*|java\\.rmi\\..*|java\\.awt\\..*|javax\\.swing\\..*)\\s*;",
+                "^\\s*import\\s+(static\\s+)?(sun\\.misc\\.Unsafe|java\\.nio\\..*|java\\.net\\..*|java\\.lang\\.reflect\\..*|java\\.lang\\.ProcessBuilder|javax\\.script\\..*|javax\\.xml\\..*|java\\.sql\\..*|java\\.rmi\\..*|java\\.awt\\..*|javax\\.swing\\..*)\\s*;",
                 Pattern.MULTILINE
         ));
         List<String> regexes = Arrays.asList(

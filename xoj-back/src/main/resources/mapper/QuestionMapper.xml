@@ -8,11 +8,11 @@
             <id property="id" column="id" />
             <result property="title" column="title" />
             <result property="content" column="content" />
-            <result property="tags" column="tags" />
+            <result property="tagList" column="tagList" />
             <result property="answer" column="answer" />
             <result property="submitNum" column="submitNum" />
             <result property="acceptNum" column="acceptNum" />
-            <result property="judgeCase" column="judgeCase" />
+            <result property="judgeCaseVersion" column="judgeCaseVersion" />
             <result property="judgeConfig" column="judgeConfig" />
             <result property="thumbNum" column="thumbNum" />
             <result property="favourNum" column="favourNum" />
@@ -23,8 +23,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,title,content,tags,answer,submitNum,
-        acceptNum,judgeCase,judgeConfig,thumbNum,favourNum,
+        id,title,content,tagList,answer,submitNum,
+        acceptNum,judgeCaseVersion,judgeConfig,thumbNum,favourNum,
         userId,createTime,updateTime,isDelete
     </sql>
 </mapper>

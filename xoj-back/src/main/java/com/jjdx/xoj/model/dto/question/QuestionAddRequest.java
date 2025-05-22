@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 public class QuestionAddRequest implements Serializable {
 
-
     /**
      标题
      */
@@ -25,7 +24,7 @@ public class QuestionAddRequest implements Serializable {
     /**
      标签
      */
-    private List<String> tags;
+    private List<String> tagList;
 
     /**
      标准答案
@@ -33,14 +32,9 @@ public class QuestionAddRequest implements Serializable {
     private String answer;
 
     /**
-     判题用例
-     */
-    private List<JudgeCase> judgeCaseList;
-
-    /**
      判题配置
      */
-    private  JudgeConfig  judgeConfig;
+    private JudgeConfig judgeConfig;
 
     private static final long serialVersionUID = 1L;
 }

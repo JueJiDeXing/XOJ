@@ -10,6 +10,7 @@ import ManageQuestionView from "@/views/question/ManageQuestionView.vue";
 import QuestionView from "@/views/question/QuestionView.vue";
 import DoQuestionView from "@/views/question/DoQuestionView.vue";
 import UserProfileView from "@/views/user/UserProfileView.vue";
+import UpdateJudgeCaseView from "@/views/question/UpdateJudgeCaseView.vue";
 
 
 const userRouters: Array<RouteRecordRaw> = [
@@ -61,7 +62,7 @@ const questionRouters: Array<RouteRecordRaw> = [
         name: '创建题目',
         component: AddQuestionView,
         meta: {
-            access: AccessEnum.USER,
+            access: AccessEnum.ADMIN,
             hideInMenu: false,
             layout: "BasicLayout",
             order: 4
@@ -72,7 +73,7 @@ const questionRouters: Array<RouteRecordRaw> = [
         name: '更新题目',
         component: AddQuestionView,
         meta: {
-            access: AccessEnum.USER,
+            access: AccessEnum.ADMIN,
             hideInMenu: true,
             layout: "BasicLayout",
         },
@@ -98,7 +99,18 @@ const questionRouters: Array<RouteRecordRaw> = [
             hideInMenu: true,
             layout: "BasicLayout",
         },
+    }, {
+        path: '/update/judgecase',
+        name: '更新测试用例',
+        component: UpdateJudgeCaseView,
+        props: true,
+        meta: {
+            access: AccessEnum.ADMIN,
+            hideInMenu: true,
+            layout: "BasicLayout",
+        },
     },
+
 ];
 export const routes: Array<RouteRecordRaw> = [
     ...userRouters,

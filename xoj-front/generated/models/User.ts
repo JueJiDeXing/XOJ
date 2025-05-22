@@ -10,7 +10,7 @@ export type User = {
     unionId?: string;
     updateTime?: string;
     userAccount?: string;
-    userAvatar?: string;
+    userAvatarVersion?: number;
     userName?: string;
     userPassword?: string;
     userProfile?: string;

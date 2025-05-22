@@ -10,7 +10,7 @@ export type Question = {
     favourNum?: number;
     id?: number;
     isDelete?: number;
-    judgeCaseList?: string;
+    judgeCaseVersion?: number;
     judgeConfig?: string;
     submitNum?: number;
     tagList?: string;

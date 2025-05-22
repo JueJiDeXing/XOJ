@@ -50,9 +50,9 @@ public class User implements Serializable {
     private String userName;
 
     /**
-     * 用户头像(本地文件路径)
+     * 用户头像版本号(时间戳)
      */
-    private String userAvatar;
+    private Long userAvatarVersion;
 
     /**
      * 用户简介

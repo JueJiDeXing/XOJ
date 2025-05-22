@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { BaseResponse_Array_byte_ } from './models/BaseResponse_Array_byte_';
 export type { BaseResponse_boolean_ } from './models/BaseResponse_boolean_';
+export type { BaseResponse_List_JudgeCase_ } from './models/BaseResponse_List_JudgeCase_';
 export type { BaseResponse_LoginUserVO_ } from './models/BaseResponse_LoginUserVO_';
 export type { BaseResponse_long_ } from './models/BaseResponse_long_';
 export type { BaseResponse_Page_Question_ } from './models/BaseResponse_Page_Question_';
@@ -54,5 +55,4 @@ export type { UserVO } from './models/UserVO';
 
 export { FileRecordControllerService } from './services/FileRecordControllerService';
 export { QuestionControllerService } from './services/QuestionControllerService';
-export { QuestionSubmitControllerService } from './services/QuestionSubmitControllerService';
 export { UserControllerService } from './services/UserControllerService';

@@ -19,7 +19,7 @@ public enum JudgeInfoMessageEnum {
     COMPILE_ERROR("编译错误", "Compile Error"),
     RUNTIME_ERROR("运行错误", "Runtime Error"),
     PRESENTATION_ERROR("输出格式错误", "Presentation Error"),
-    SYSTEM_ERROR("系统错误", "Runtime Error"),
+    SYSTEM_ERROR("系统错误", "System Error"),
     DANGEROUS_CODE("危险代码", "Dangerous Code"),
     WAITING("等待中", "Waiting");
 

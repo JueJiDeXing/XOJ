@@ -37,52 +37,22 @@
         </a-space>
       </a-form-item>
 
-      <a-form-item label="测试用例" :content-flex="false" :merge-props="false">
-
-
-        <a-form-item no-style v-for="(judgeCaseItem,index) of form.judgeCaseList"
-                     :field="`form.judgeCaseList[${index}]`"
-                     :key="index">
-          <a-form-item
-              :field="`form.judgeCaseList[${index}].input`"
-              :label="`输入 ${index+1}`"
-              :key="index" style="min-width: 360px;">
-            <a-input v-model="judgeCaseItem.input"/>
-          </a-form-item>
-
-          <a-form-item
-              :field="`form.judgeCaseList[${index}].output`"
-              :label="`输出 ${index+1}`"
-              :key="index" style="min-width: 360px;">
-            <a-input v-model="judgeCaseItem.output"/>
-          </a-form-item>
-
-          <a-button status="danger" @click="handleDelete(index)">
-            删除
-          </a-button>
-
-        </a-form-item>
-
-        <div>
-          <a-button type="outline" status="success" style="margin-top: 32px" @click="handleAdd">新增测试用例</a-button>
-        </div>
-
-      </a-form-item>
       <div style="margin-top: 16px"></div>
       <a-form-item>
         <a-button type="primary" style="min-width: 160px" html-type="submit" @click="doSubmit">提交</a-button>
+        <a-button v-if="form.id" type="outline" style="margin-left: 16px" @click="navigateToTestCaseManagement">
+          管理测试用例
+        </a-button>
       </a-form-item>
     </a-form>
   </div>
 </template>
 
-
 <script setup lang="ts">
-
 import {onMounted, ref} from "vue";
 import MdEditor from "@/components/MdEditor.vue";
 import {QuestionAddRequest, QuestionControllerService} from "../../../generated";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import message from "@arco-design/web-vue/es/message";
 
 const form = ref({
@@ -94,27 +64,21 @@ const form = ref({
     memoryLimit: 1000,
     timeLimit: 1000
   },
-  judgeCaseList: [
-    {
-      input: "",
-      output: ""
-    }
-  ],
 } as QuestionAddRequest);
+
 const route = useRoute();
+const router = useRouter();
 const updatePage = route.path.includes("update");
+
 const loadData = async () => {
   const id = route.query.id;
   if (!id) return;
   const res = await QuestionControllerService.getQuestionByIdUsingGet(id);
   if (res.code === 0) {
-    console.log(res.data);
     form.value = res.data;
     form.value.tagList = JSON.parse(res.data?.tagList);
-    form.value.judgeCaseList = JSON.parse(res.data?.judgeCaseList);
     form.value.judgeConfig = JSON.parse(res.data?.judgeConfig);
     if (!form.value.tagList) form.value.tagList = [];
-    if (!form.value.judgeCaseList) form.value.judgeCaseList = [];
     if (!form.value.judgeConfig) form.value.judgeConfig = {
       memoryLimit: 1000,
       timeLimit: 1000
@@ -125,22 +89,15 @@ const loadData = async () => {
 };
 onMounted(() => {
   loadData();
-})
-const handleAdd = () => {
-  form.value.judgeCaseList.push({
-    input: "",
-    output: ""
-  });
-}
-const handleDelete = (index) => {
-  form.value.judgeCaseList.splice(index, 1);
-}
+});
+
 const onAnswerChange = (v) => {
   form.value.answer = v;
-}
+};
+
 const onContentChange = (v) => {
   form.value.content = v;
-}
+};
 
 const doSubmit = async () => {
   if (updatePage) {
@@ -153,12 +110,24 @@ const doSubmit = async () => {
   } else {
     const res = await QuestionControllerService.addQuestionUsingPost(form.value);
     if (res.code === 0) {
-      message.info("提交成功");
+      message.success("提交成功");
+      form.value.id = res.data;
     } else {
       message.error("提交失败: " + res.message);
     }
   }
-}
+};
+
+const navigateToTestCaseManagement = () => {
+  if (form.value.id) {
+    router.push({
+      path: "/update/judgecase",
+      query: {
+        id: form.value.id
+      }
+    });
+  }
+};
 </script>
 
 

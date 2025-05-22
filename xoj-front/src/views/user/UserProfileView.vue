@@ -9,7 +9,7 @@
       <a-card class="info-card" title="头像设置">
         <div class="avatar-uploader">
           <div class="avatar-wrapper" @click="triggerFileInput">
-            <img v-if="avatarUrl" :src="avatarUrl" class="avatar" alt=""/>
+            <img v-if="previewUrl || avatarUrl" :src="previewUrl ||avatarUrl" class="avatar" alt=""/>
             <div v-else class="avatar-placeholder">
               <icon-user/>
             </div>
@@ -26,14 +26,22 @@
             />
           </div>
         </div>
-        <a-button
-            type="primary"
-            :loading="avatarLoading"
-            :disabled="!avatarFile"
-            @click="submitAvatar"
-        >
-          保存头像
-        </a-button>
+        <a-space>
+          <a-button
+              type="primary"
+              :loading="avatarLoading"
+              :disabled="!avatarFile"
+              @click="submitAvatar"
+          >
+            保存头像
+          </a-button>
+          <a-button
+              v-if="previewUrl"
+              @click="cancelPreview"
+          >
+            取消
+          </a-button>
+        </a-space>
       </a-card>
 
       <!-- 用户信息编辑 -->
@@ -99,14 +107,12 @@ import getStatusColor from '../../commonTs/getStatusColor.ts';
 import moment from 'moment';
 import message from '@arco-design/web-vue/es/message';
 import {IconUpload, IconUser} from '@arco-design/web-vue/es/icon';
-import getImage_base64 from "@/commonTs/getImage_base64";
 
 const router = useRouter();
 
 // 用户相关
 const form = ref({
   userName: '',
-  userAvatar: '',
   userProfile: '',
 });
 
@@ -117,7 +123,7 @@ const avatarFile = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const avatarUrl = ref<string>("");
-
+const previewUrl = ref<string>(""); // 新增预览URL
 // 计算表单是否修改过
 const isFormChanged = computed(() => {
   return (
@@ -145,7 +151,7 @@ const handleAvatarUpload = (e: Event) => {
     // 预览图片
     const reader = new FileReader();
     reader.onload = (e) => {
-      form.value.userAvatar = e.target?.result as string;
+      previewUrl.value = e.target?.result as string; // 设置预览URL
     };
     reader.readAsDataURL(file);
 
@@ -153,37 +159,39 @@ const handleAvatarUpload = (e: Event) => {
   }
 };
 
-// 上传头像文件
+// 取消预览
+const cancelPreview = () => {
+  previewUrl.value = "";
+  avatarFile.value = null;
+  if (fileInput.value) {
+    fileInput.value.value = ""; // 清空文件输入
+  }
+};
+
+const fetchAvatar = async (avatarUrl: ref<string>) => {
+  const res = await FileRecordControllerService.getAvatarUsingGet();
+  if (res.code !== 0) {
+    message.error('头像获取失败: ' + res.message)
+    return;
+  }
+  avatarUrl.value =`data:image/png;base64,${res.data}`
+}
+// 上传头像文件到服务端
 const submitAvatar = async () => {
   if (!avatarFile.value) return;
 
   try {
     avatarLoading.value = true;
     // 上传头像文件
-    const res = await FileRecordControllerService.uploadFileUsingPost(avatarFile.value);
-    if (res.code === 0) {
-      message.success('头像上传成功');
-      // 更新头像URL
-      const updateRes = await UserControllerService.updateMyUserUsingPost({
-        userAvatar: res.data // 只更新头像字段
-      });
-      if (updateRes.code === 0) {
-        // 更新成功，同步本地数据
-        form.value.userAvatar = res.data;
-        originalForm.value.userAvatar = res.data;
-        avatarFile.value = null;
-        // 获取新头像
-        getImage_base64(res.data).then((base64Image) => {
-          avatarUrl.value = base64Image;
-        }).catch((err) => {
-          console.error('获取头像失败:', err);
-        });
-      } else {
-        message.error('头像更新失败: ' + updateRes.message);
-      }
-    } else {
-      message.error('头像上传失败: ' + res.message);
+    const resUpload = await FileRecordControllerService.uploadAvatarUsingPost(avatarFile.value);
+    if (resUpload.code !== 0) {
+      message.error('头像上传失败: ' + resUpload.message)
+      return;
     }
+    message.success('头像上传成功');
+    // 上传成功后，更新正式头像并清除预览
+    await fetchAvatar(avatarUrl);
+    avatarFile.value = null;
   } catch (err) {
     message.error('头像上传失败');
     console.error(err);
@@ -227,7 +235,6 @@ const fetchUserInfo = async (form) => {
     if (res.code === 0) {
       form.value = {
         userName: res.data.userName || '',
-        userAvatar: res.data.userAvatar || '',
         userProfile: res.data.userProfile || '',
       };
       originalForm.value = {...form.value};
@@ -241,7 +248,7 @@ const fetchUserInfo = async (form) => {
   }
 };
 
-// 提交记录相关
+// -------------------------------------提交记录相关
 const submissionData = ref([]);
 const submissionLoading = ref(false);
 const submissionPagination = ref({
@@ -317,13 +324,7 @@ const handleRowClick = (record: any) => {
 
 onMounted(async () => {
   await fetchUserInfo(form);
-
-  getImage_base64(form.value.userAvatar).then((base64Image) => {
-    avatarUrl.value = base64Image;
-  }).catch((err) => {
-    console.error('Error setting avatar URL:', err);
-  });
-
+  await fetchAvatar(avatarUrl);
   fetchSubmissions();
 });
 </script>
