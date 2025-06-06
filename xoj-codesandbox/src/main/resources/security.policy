@@ -1,0 +1,7 @@
+grant {
+    // 允许必要的运行时权限
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.RuntimePermission "createClassLoader";
+
+    // 禁止其他危险操作
+};

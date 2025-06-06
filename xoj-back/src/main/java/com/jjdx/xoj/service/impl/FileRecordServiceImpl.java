@@ -22,10 +22,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
-public class FileRecordServiceImpl   implements FileRecordService {
+public class FileRecordServiceImpl implements FileRecordService {
 
     @Resource
     private UserService userService;
@@ -50,7 +51,7 @@ public class FileRecordServiceImpl   implements FileRecordService {
 
         try {
             // 生成新版本号
-            long newVersion = System.currentTimeMillis();
+            String newVersion = UUID.randomUUID().toString();
 
             // 创建版本目录
             String versionDir = userDirPrefix + File.separator + userId + File.separator + newVersion;
@@ -87,7 +88,7 @@ public class FileRecordServiceImpl   implements FileRecordService {
     public byte[] getAvatar(Long userId) {
         try {
             // 获取当前版本号
-            long currentVersion = userService.getUserAvatarVersion(userId);
+            String currentVersion = userService.getUserAvatarVersion(userId);
 
             // 构建文件路径
             String versionDir = userDirPrefix + File.separator + userId + File.separator + currentVersion;
@@ -113,7 +114,7 @@ public class FileRecordServiceImpl   implements FileRecordService {
 
         try {
             // 生成新版本号
-            long newVersion = System.currentTimeMillis();
+            String newVersion = UUID.randomUUID().toString();
 
             // 创建版本目录
             String versionDir = judgeCaseDirPrefix + File.separator + questionId + File.separator + newVersion;
@@ -151,7 +152,7 @@ public class FileRecordServiceImpl   implements FileRecordService {
     public List<JudgeCase> getJudgecase(Long questionId) {
         try {
             // 获取当前测试用例版本号
-            long currentVersion = questionService.getJudgeCaseVersion(questionId);
+            String currentVersion = questionService.getJudgeCaseVersion(questionId);
 
             // 构建测试用例目录路径
             String versionDir = judgeCaseDirPrefix + File.separator + questionId + File.separator + currentVersion;

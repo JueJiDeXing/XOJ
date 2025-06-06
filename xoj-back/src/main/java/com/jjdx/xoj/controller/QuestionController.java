@@ -202,7 +202,8 @@ public class QuestionController {
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 
         Page<Question> questionPage;
-        if (StringUtils.isNotBlank(questionQueryRequest.getTitle())) {// 题目名称查询
+        if (StringUtils.isNotBlank(questionQueryRequest.getTitle()) ||
+                StringUtils.isNotBlank(questionQueryRequest.getContent())) {// 题目名称和内容查询
             questionPage = questionEsService.searchFromEs(questionQueryRequest);
         } else { // 常规查询
             questionPage = questionService.page(new Page<>(current, size),
@@ -220,8 +221,14 @@ public class QuestionController {
                                                                    HttpServletRequest request) {
         long current = questionQueryRequest.getCurrent();
         long size = questionQueryRequest.getPageSize();
-        Page<Question> questionPage = questionService.page(new Page<>(current, size),
-                questionService.getQueryWrapper(questionQueryRequest));
+        Page<Question> questionPage;
+        if (StringUtils.isNotBlank(questionQueryRequest.getTitle()) ||
+                StringUtils.isNotBlank(questionQueryRequest.getContent())) {// 题目名称和内容查询
+            questionPage = questionEsService.searchFromEs(questionQueryRequest);
+        } else { // 常规查询
+            questionPage = questionService.page(new Page<>(current, size),
+                    questionService.getQueryWrapper(questionQueryRequest));
+        }
         return ResultUtils.success(questionPage);
     }
 

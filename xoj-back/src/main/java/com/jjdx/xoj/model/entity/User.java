@@ -52,7 +52,7 @@ public class User implements Serializable {
     /**
      * 用户头像版本号(时间戳)
      */
-    private Long userAvatarVersion;
+    private String userAvatarVersion;
 
     /**
      * 用户简介

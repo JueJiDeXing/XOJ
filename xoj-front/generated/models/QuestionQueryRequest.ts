@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type QuestionQueryRequest = {
+    content?: string;
     current?: number;
     id?: number;
     pageSize?: number;

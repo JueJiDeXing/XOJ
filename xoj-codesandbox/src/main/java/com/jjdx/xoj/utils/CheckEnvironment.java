@@ -31,6 +31,7 @@ public class CheckEnvironment {
         String osName = System.getProperty("os.name").toLowerCase();
         return osName.contains("windows");
     }
+
     /**
      检查java环境是否可用
      */
@@ -51,4 +52,6 @@ public class CheckEnvironment {
     public static boolean isDockerValidAndLinux() {
         return isDockerValid() && isLinuxEnvironment();
     }
+
+
 }

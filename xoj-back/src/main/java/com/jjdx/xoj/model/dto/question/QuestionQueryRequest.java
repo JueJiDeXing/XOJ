@@ -23,6 +23,10 @@ public class QuestionQueryRequest extends PageRequest implements Serializable {
      标题
      */
     private String title;
+    /**
+     内容
+     */
+    private String content;
      /**
      标签
      */

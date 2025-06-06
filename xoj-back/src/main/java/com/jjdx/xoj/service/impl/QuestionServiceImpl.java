@@ -13,7 +13,6 @@ import com.jjdx.xoj.model.entity.Question;
 import com.jjdx.xoj.model.entity.User;
 import com.jjdx.xoj.model.vo.QuestionVO;
 import com.jjdx.xoj.model.vo.UserVO;
-import com.jjdx.xoj.service.Es.QuestionEsService;
 import com.jjdx.xoj.service.QuestionService;
 import com.jjdx.xoj.service.UserService;
 import com.jjdx.xoj.utils.SqlUtils;
@@ -115,23 +114,31 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
     /**
      获取测试用例的版本号
-     * @param questionId 题目id
-     * @return
+
+     @param questionId 题目id
+     @return
      */
     @Override
-    public Long getJudgeCaseVersion(Long questionId) {
+    public String getJudgeCaseVersion(Long questionId) {
         Question question = getById(questionId);
-        Long judgeCaseVersion = question.getJudgeCaseVersion();
-        if (judgeCaseVersion == null) {
+        String judgeCaseVersion = question.getJudgeCaseVersion();
+        if (StringUtils.isBlank(judgeCaseVersion)) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "未找到测试用例");
         }
         return judgeCaseVersion;
     }
 
+    @Override
+    public String getJudgeCaseVersionNullable(Long questionId) {
+        Question question = getById(questionId);
+        return question.getJudgeCaseVersion();
+    }
+
     /**
      获取updateTime~now的题目列表
-     * @param updateTime 最早更新时间
-     * @return
+
+     @param updateTime 最早更新时间
+     @return
      */
     @Override
     public List<Question> listQuestionsAfterUpdateTime(Date updateTime) {
@@ -151,14 +158,14 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
             return queryWrapper;
         }
         Long id = questionQueryRequest.getId();
-        String title = questionQueryRequest.getTitle();
+        String searchText = questionQueryRequest.getTitle();
         List<String> tagList = questionQueryRequest.getTagList();
         Long userId = questionQueryRequest.getUserId();
         String sortField = questionQueryRequest.getSortField();
         String sortOrder = questionQueryRequest.getSortOrder();
 
         // 拼接查询条件
-        queryWrapper.like(StringUtils.isNotBlank(title), "title", title);
+        queryWrapper.like(StringUtils.isNotBlank(searchText), "title", searchText);
         if (CollectionUtils.isNotEmpty(tagList)) {
             for (String tag : tagList) {
                 queryWrapper.like("tagList", "\"" + tag + "\"");

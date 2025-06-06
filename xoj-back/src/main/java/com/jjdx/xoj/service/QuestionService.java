@@ -55,7 +55,8 @@ public interface QuestionService extends IService<Question> {
     /**
      获取测试用例版本号
      */
-    Long getJudgeCaseVersion(Long questionId);
+    String getJudgeCaseVersion(Long questionId);
+    String getJudgeCaseVersionNullable(Long questionId);
 
 
     List<Question> listQuestionsAfterUpdateTime(Date updateTime);

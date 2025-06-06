@@ -1,18 +1,18 @@
 package com.jjdx.xoj.model.vo;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.jjdx.xoj.model.dto.question.JudgeConfig;
 import com.jjdx.xoj.model.entity.Question;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  题目视图
  */
+@Slf4j
 @Data
 public class QuestionVO implements Serializable {
 
@@ -33,9 +33,9 @@ public class QuestionVO implements Serializable {
     private String content;
 
     /**
-     标签
+     标签(json数组)
      */
-    private List<String> tagList;
+    private String tagList;
 
     /**
      提交数
@@ -84,10 +84,6 @@ public class QuestionVO implements Serializable {
         Question question = new Question();
         BeanUtils.copyProperties(questionVO, question);
 
-        List<String> tagList = questionVO.getTagList();
-        if (tagList != null) {
-            question.setTagList(GSON.toJson(tagList));
-        }
         JudgeConfig judgeConfig = questionVO.getJudgeConfig();
         if (judgeConfig != null) {
             question.setJudgeConfig(GSON.toJson(judgeConfig));
@@ -107,9 +103,6 @@ public class QuestionVO implements Serializable {
         }
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
-
-        List<String> tagList = GSON.fromJson(question.getTagList(), new TypeToken<List<String>>() {}.getType());
-        questionVO.setTagList(tagList);
 
         JudgeConfig judgeConfig = GSON.fromJson(question.getJudgeConfig(), JudgeConfig.class);
         questionVO.setJudgeConfig(judgeConfig);

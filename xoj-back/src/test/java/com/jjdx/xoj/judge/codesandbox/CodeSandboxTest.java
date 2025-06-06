@@ -1,7 +1,10 @@
 package com.jjdx.xoj.judge.codesandbox;
 
-import com.jjdx.xoj.judge.codesandbox.model.ExecuteCodeRequest;
-import com.jjdx.xoj.judge.codesandbox.model.ExecuteCodeResponse;
+import com.jjdx.xoj.judge.CodeSandbox;
+import com.jjdx.xoj.judge.CodeSandboxFactory;
+import com.jjdx.xoj.judge.CodeSandboxProxy;
+import com.jjdx.xoj.judge.model.ExecuteCodeRequest;
+import com.jjdx.xoj.judge.model.ExecuteCodeResponse;
 import com.jjdx.xoj.model.enums.QuestionSubmitLanguageEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;

@@ -5,8 +5,11 @@
       <a-form-item field="id" label="题号" style="min-width: 240px">
         <a-input v-model="searchParams.id"/>
       </a-form-item>
-      <a-form-item field="title" label="名称" style="min-width: 240px">
+      <a-form-item field="title" label="题目名称" style="min-width: 240px">
         <a-input v-model="searchParams.title"/>
+      </a-form-item>
+      <a-form-item field="content" label="题目内容" style="min-width: 240px">
+        <a-input v-model="searchParams.content"/>
       </a-form-item>
       <a-form-item field="tagList" label="标签" style="min-width: 280px">
         <a-input-tag v-model="searchParams.tagList"/>
@@ -58,7 +61,7 @@
 
 <script setup lang="ts">
 import {ref, watchEffect} from 'vue';
-import {QuestionControllerService} from "../../../generated";
+import {QuestionControllerService, QuestionQueryRequest} from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import {useRouter} from "vue-router";
 import moment from "moment";
@@ -71,21 +74,24 @@ const total = ref(0);
 const searchParams = ref({
   id: null,
   title: "",
+  content: "",
   tagList: [],
   pageSize: 10,
   current: 1,
-});
+} as QuestionQueryRequest);
 const loadData = async () => {
   if (!isLogin()) {
     console.log("未登录/已过期");
     await router.push({path: "/user/login"});
     return;
   }
-  const result = await QuestionControllerService.listQuestionVoByPageAdminUsingPost(searchParams.value);
+  const result = await QuestionControllerService.listQuestionVoByPageUsingPost(searchParams.value);
+  console.log(result);
   if (result.code === 0) {
     dataList.value = result.data.records;
     total.value = parseInt(result.data.total);
-    console.log("查找到", result.data.records.length, "个题目");
+    message.info("查找到", result.data.records.length, "个题目");
+    console.log(result.data.records);
   } else {
     message.error("加载失败: " + result.message);
   }

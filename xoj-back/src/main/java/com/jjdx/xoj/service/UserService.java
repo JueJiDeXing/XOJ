@@ -116,8 +116,8 @@ public interface UserService extends IService<User> {
     /**
      获取用户头像版本号
      */
-    Long getUserAvatarVersion(Long userId);
+    String getUserAvatarVersion(Long userId);
 
-    Long getUserAvatarVersionNullable(Long userId);
+    String getUserAvatarVersionNullable(Long userId);
 
 }

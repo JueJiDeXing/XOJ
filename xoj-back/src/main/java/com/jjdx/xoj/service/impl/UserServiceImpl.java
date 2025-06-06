@@ -226,20 +226,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Long getUserAvatarVersion(Long userId) {
+    public String getUserAvatarVersion(Long userId) {
         User user = getById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
         }
-        Long userAvatarVersion = user.getUserAvatarVersion();
-        if (userAvatarVersion == null) {
+        String userAvatarVersion = user.getUserAvatarVersion();
+        if (StringUtils.isBlank(userAvatarVersion)) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户未设置头像");
         }
         return userAvatarVersion;
     }
 
     @Override
-    public Long getUserAvatarVersionNullable(Long userId) {
+    public String getUserAvatarVersionNullable(Long userId) {
         User user = getById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");

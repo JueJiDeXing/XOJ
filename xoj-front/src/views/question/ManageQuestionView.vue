@@ -1,5 +1,25 @@
 <template>
   <div id="manageQuestionView" class="container">
+    <!-- Search Form -->
+    <a-form :model="searchParams" layout="inline">
+      <a-form-item field="id" label="题号" style="min-width: 240px">
+        <a-input v-model="searchParams.id" placeholder="请输入题号"/>
+      </a-form-item>
+      <a-form-item field="title" label="题目名称" style="min-width: 240px">
+        <a-input v-model="searchParams.title" placeholder="请输入题目名称"/>
+      </a-form-item>
+      <a-form-item field="content" label="题目内容" style="min-width: 240px">
+        <a-input v-model="searchParams.content" placeholder="请输入题目内容"/>
+      </a-form-item>
+      <a-form-item field="tagList" label="标签" style="min-width: 280px">
+        <a-input-tag v-model="searchParams.tagList" placeholder="请输入标签"/>
+      </a-form-item>
+      <a-form-item>
+        <a-button type="outline" @click="onSearch">搜索</a-button>
+      </a-form-item>
+    </a-form>
+    <a-divider :size="0"/>
+
     <a-table
         :ref="tableRef"
         :columns="columns"
@@ -79,7 +99,7 @@
 
 <script setup lang="ts">
 import {onMounted, ref, watchEffect} from 'vue';
-import {QuestionControllerService} from "../../../generated";
+import {QuestionControllerService, QuestionQueryRequest} from "../../../generated";
 import message from "@arco-design/web-vue/es/message";
 import {useRouter} from "vue-router";
 import moment from "moment/moment";
@@ -88,9 +108,13 @@ const tableRef = ref();
 const dataList = ref([]);
 const total = ref(0);
 const searchParams = ref({
+  id: null,
+  title: "",
+  content: "",
+  tagList: [],
   pageSize: 10,
   current: 1,
-});
+} as QuestionQueryRequest);
 
 const loadData = async () => {
   const result = await QuestionControllerService.listQuestionVoByPageAdminUsingPost(searchParams.value);
@@ -101,6 +125,7 @@ const loadData = async () => {
     message.error("加载失败: " + result.message);
   }
 };
+
 watchEffect(() => {
   loadData();
 });
@@ -202,6 +227,13 @@ const onPageChange = (page) => {
   searchParams.value = {
     ...searchParams.value,
     current: page
+  }
+}
+
+const onSearch = () => {
+  searchParams.value = {
+    ...searchParams.value,
+    current: 1
   }
 }
 

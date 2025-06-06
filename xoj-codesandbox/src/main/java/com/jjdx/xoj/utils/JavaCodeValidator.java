@@ -20,6 +20,8 @@ java.math.*
 java.lang.*
  */
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.regex.Pattern;
 /**
  代码校验 (文件交互、命令执行、网络、反射、进程等操作禁止)
  */
+@Slf4j
 public class JavaCodeValidator {
     private JavaCodeValidator() {}
 
@@ -36,12 +39,32 @@ public class JavaCodeValidator {
     static {
         // 禁止的import语句
         FORBIDDEN_PATTERNS.add(Pattern.compile(
-                "^\\s*import\\s+(static\\s+)?(sun\\.misc\\.Unsafe|java\\.nio\\..*|java\\.net\\..*|java\\.lang\\.reflect\\..*|java\\.lang\\.ProcessBuilder|javax\\.script\\..*|javax\\.xml\\..*|java\\.sql\\..*|java\\.rmi\\..*|java\\.awt\\..*|javax\\.swing\\..*)\\s*;",
+                "^\\s*import\\s+(static\\s+)?" +
+                        "(sun\\.misc\\.Unsafe|" +
+                        "java\\.nio\\..*|" +
+                        "java\\.net\\..*|" +
+                        "java\\.lang\\.reflect\\..*|" +
+                        "java\\.lang\\.ProcessBuilder|" +
+                        "javax\\.script\\..*|" +
+                        "javax\\.xml\\..*|" +
+                        "java\\.sql\\..*|" +
+                        "java\\.rmi\\..*|" +
+                        "java\\.awt\\..*|" +
+                        "javax\\.swing\\..*)\\s*;",
                 Pattern.MULTILINE
         ));
         List<String> regexes = Arrays.asList(
                 // 禁止的完全限定类名使用
-                "\\b(java\\.nio\\..*|java\\.net\\..*|java\\.lang\\.reflect\\..*|java\\.lang\\.ProcessBuilder\\b|javax\\.script\\..*|javax\\.xml\\..*|java\\.sql\\..*|java\\.rmi\\..*|java\\.awt\\..*|javax\\.swing\\..*)\\b",
+                "\\b(java\\.nio\\..*|" +
+                        "java\\.net\\..*|" +
+                        "java\\.lang\\.reflect\\..*|" +
+                        "java\\.lang\\.ProcessBuilder\\b|" +
+                        "javax\\.script\\..*|" +
+                        "javax\\.xml\\..*|" +
+                        "java\\.sql\\..*|" +
+                        "java\\.rmi\\..*|" +
+                        "java\\.awt\\..*|" +
+                        "javax\\.swing\\..*)\\b",
                 // 危险类实例化
                 "\\bnew\\s+ProcessBuilder\\s*\\(",
                 "\\bnew\\s+ScriptEngineManager\\s*\\(",
@@ -64,19 +87,27 @@ public class JavaCodeValidator {
 
     }
 
+    /**
+     校验代码合法性
+
+     @param code
+     @return
+     */
     public static boolean validateCode(String code) {
         String processedCode = preprocess(code);
         for (Pattern pattern : FORBIDDEN_PATTERNS) {
             if (pattern.matcher(processedCode).find()) {
-                System.out.println("危险匹配: " + pattern);
+                log.warn("危险匹配: {}", pattern);
                 return false;
             }
         }
         return true;
     }
 
+    /**
+     预加工代码: 去除注释、引号
+     */
     private static String preprocess(String code) {
-        // 移除注释
         String processed = removeComments(code);
         // 移除双引号字符串内容
         processed = processed.replaceAll("\"(?:\\\\\"|[^\"\\\\])*\"", "");

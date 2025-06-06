@@ -1,6 +1,7 @@
 package com.jjdx.xoj.codeSandbox;
 
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
@@ -34,34 +35,46 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 @Slf4j
 public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate implements CodeSandbox {
-
-    public static String imageName; // java镜像名
-    public static boolean firstInitImage;// 镜像是否为第一次拉取
-    private static int PreContainers; // 预创建容器数量
-
+    public static void main(String[] args) throws Exception {
+        JavaDockerCodeSandbox javaCodeSandbox = new JavaDockerCodeSandbox();
+        javaCodeSandbox.initContainerPool();
+        System.out.println("容器池 = " + javaCodeSandbox.containerPool.size());
+        ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
+        List<String> inputList = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            String input = "0 " + i + "\n";
+            inputList.add(input);
+        }
+        executeCodeRequest.setInputList(inputList);
+        String code = ResourceUtil.readStr("Main.java", StandardCharsets.UTF_8);
+        executeCodeRequest.setCode(code);
+        executeCodeRequest.setLanguage("java");
+        StopWatch stopWatch = new StopWatch();
+        System.out.println("开始执行");
+        stopWatch.start();
+        ExecuteCodeResponse executeCodeResponse = javaCodeSandbox.executeCode(executeCodeRequest);
+        stopWatch.stop();
+        System.out.println(stopWatch.prettyPrint());
+        System.out.println("response: " + executeCodeResponse);
+    }
 
     @Value("${docker.imageName:openjdk:8-jre-alpine}")
-    public void setImage(String imageName) {
-        JavaDockerCodeSandbox.imageName = imageName;
-    }
+    public String imageName; // java镜像名
 
-    @Value("${docker.firstInitImage:true}")
-    public void setIsFirstInit(boolean firstInitImage) {
-        JavaDockerCodeSandbox.firstInitImage = firstInitImage;
-    }
+    @Value("${docker.firstInitImage:false}")
+    public boolean firstInitImage;// 镜像是否为第一次拉取
 
     @Value("${docker.PreContainers:50}")
-    public void setPreContainers(int PreContainers) {
-        JavaDockerCodeSandbox.PreContainers = PreContainers;
-    }
+    private int PreContainers; // 预创建容器数量
 
-    private static DockerClient dockerClient;
 
-    private static final LinkedBlockingQueue<String> containerPool = new LinkedBlockingQueue<>();
+    private DockerClient dockerClient;
+
+    private final LinkedBlockingQueue<String> containerPool = new LinkedBlockingQueue<>();
 
 
     @PostConstruct
-    public static void initContainerPool() {
+    public void initContainerPool() {
         // 检查Docker环境是否可用
         boolean dockerAvailable = CheckEnvironment.isDockerValidAndLinux();
         if (!dockerAvailable) {
@@ -87,35 +100,13 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate implements Co
         log.info("预创建容器完成");
     }
 
-    public static void main(String[] args) throws Exception {
-        initContainerPool();
-        System.out.println("containerPool.size() = " + containerPool.size());
-        ExecuteCodeRequest executeCodeRequest = new ExecuteCodeRequest();
-        JavaDockerCodeSandbox javaCodeSandbox = new JavaDockerCodeSandbox();
-        List<String> inputList = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            String input = "0 " + i + "\n";
-            inputList.add(input);
-        }
-        executeCodeRequest.setInputList(inputList);
-        String code = ResourceUtil.readStr("Main.java", StandardCharsets.UTF_8);
-        executeCodeRequest.setCode(code);
-        executeCodeRequest.setLanguage("java");
-        StopWatch stopWatch = new StopWatch();
-        System.out.println("开始执行");
-        stopWatch.start();
-        ExecuteCodeResponse executeCodeResponse = javaCodeSandbox.executeCode(executeCodeRequest);
-        stopWatch.stop();
-        System.out.println(stopWatch.prettyPrint());
-        System.out.println("response: " + executeCodeResponse);
-    }
 
     /**
      创建容器并启动
 
      @return 容器id
      */
-    private static String createAndStartContainer() {
+    private String createAndStartContainer() {
         try {
             CreateContainerResponse response = dockerClient.createContainerCmd(imageName)
                     .withHostConfig(getHostConfig())
@@ -172,6 +163,18 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate implements Co
 
             // 复制文件到容器
             copyFilesToContainer(containerId, userCodeFile.getAbsolutePath().replace(".java", ".class"));
+
+            String securityPolicyContent = "grant {\n" +
+                    "    permission java.io.FilePermission \"/app/*\", \"read\";\n" +
+                    "    permission java.lang.RuntimePermission \"accessDeclaredMembers\";\n" +
+                    "    permission java.lang.RuntimePermission \"createClassLoader\";\n" +
+                    "};";
+
+            // 创建临时策略文件并复制到容器
+            File tempPolicyFile = new File(userCodeFile.getParentFile(), "security.policy");
+            FileUtil.writeString(securityPolicyContent, tempPolicyFile, StandardCharsets.UTF_8);
+            copyFilesToContainer(containerId, tempPolicyFile.getAbsolutePath());
+            FileUtil.del(tempPolicyFile);
 
             // 并行执行测试用例
             return parallelExecute(inputList, containerId);
@@ -234,7 +237,12 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate implements Co
         statsCmd.exec(statsCallback);
 
         try {
-            String[] cmdArr = new String[]{"java", "-cp", "/app", "Main"};
+            String[] cmdArr = new String[]{
+                    "java",
+                    "-Djava.security.manager",
+                    "-Djava.security.policy==/app/security.policy",
+                    "-cp", "/app", "Main"
+            };
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                     .withCmd(cmdArr)
                     .withAttachStdin(true)
@@ -313,7 +321,7 @@ public class JavaDockerCodeSandbox extends JavaCodeSandboxTemplate implements Co
         return executeMessage;
     }
 
-    private static void pullImage(DockerClient dockerClient, String image) {
+    private void pullImage(DockerClient dockerClient, String image) {
         if (!firstInitImage) return;
         firstInitImage = false;
         log.info("拉取镜像: {}", image);

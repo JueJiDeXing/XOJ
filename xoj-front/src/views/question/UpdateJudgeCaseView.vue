@@ -1,10 +1,13 @@
 <template>
   <div class="judge-case-upload-container">
-    <a-card title="测试用例管理" :bordered="false">
+    <a-card title="测试用例管理">
+      <a-button type="primary" status="success" style=" margin-bottom: 16px" @click="goBack">
+        ←返回题目管理
+      </a-button>
+
       <a-alert v-if="!questionId" type="error" show-icon>
         未获取到题目ID，请从题目管理页面进入
       </a-alert>
-
       <template v-else>
         <a-space direction="vertical" size="large" fill>
           <a-card title="上传测试用例">
@@ -51,9 +54,6 @@
                     @click="handleUpload"
                 >
                   上传测试用例
-                </a-button>
-                <a-button style="margin-left: 16px" @click="goBack">
-                  返回题目管理
                 </a-button>
               </a-form-item>
             </a-form>
@@ -137,7 +137,6 @@ const handleOutputFilesChange = (files: any[]) => {
     };
   });
 };
-
 const handleUpload = async () => {
   if (!questionId.value) return;
 
@@ -149,21 +148,20 @@ const handleUpload = async () => {
   try {
     uploading.value = true;
 
-    const inputFormData = new FormData();
-    const outputFormData = new FormData();
+    const formData = new FormData();
 
     inputFiles.value.forEach(file => {
-      inputFormData.append('inputFiles', file.file);
+      formData.append('inputFiles', file.file);  // 字段名必须为 inputFiles
     });
 
     outputFiles.value.forEach(file => {
-      outputFormData.append('outputFiles', file.file);
+      formData.append('outputFiles', file.file); // 字段名必须为 outputFiles
     });
 
     const res = await FileRecordControllerService.uploadJudgecaseUsingPost(
         Number(questionId.value),
-        inputFormData.getAll('inputFiles') as File[],
-        outputFormData.getAll('outputFiles') as File[]
+        formData.getAll('outputFiles') as File[],
+        formData.getAll('inputFiles') as File[]
     );
 
     if (res.code === 0) {
@@ -203,7 +201,10 @@ const fetchTestCases = async () => {
 
 const goBack = () => {
   router.push({
-    path: '/manage/question'
+    path: '/update/question',
+    query: {
+      id: questionId.value
+    }
   });
 };
 </script>

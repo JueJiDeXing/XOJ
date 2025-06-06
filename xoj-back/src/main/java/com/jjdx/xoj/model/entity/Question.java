@@ -12,8 +12,7 @@ import java.util.Date;
 
 /**
  题目
-
- @TableName question */
+ */
 @TableName(value = "question")
 @Document(indexName = "question_index")
 @Data
@@ -59,7 +58,7 @@ public class Question {
     /**
      测试用例版本号(时间戳)
      */
-    private Long judgeCaseVersion;
+    private String judgeCaseVersion;
 
     /**
      判题配置(json对象)

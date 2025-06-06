@@ -2,7 +2,7 @@ package com.jjdx.xoj.model.vo;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.jjdx.xoj.judge.codesandbox.model.JudgeInfo;
+import com.jjdx.xoj.judge.model.JudgeInfo;
 import com.jjdx.xoj.model.entity.QuestionSubmit;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
@@ -98,9 +98,7 @@ public class QuestionSubmitVO implements Serializable {
         QuestionSubmitVO questionSubmitVO = new QuestionSubmitVO();
         BeanUtils.copyProperties(questionSubmit, questionSubmitVO);
         String judgeInfoListString = questionSubmit.getJudgeInfoList();
-        System.out.println(judgeInfoListString);
         List<JudgeInfo> judgeInfoList = GSON.fromJson(judgeInfoListString, new TypeToken<List<JudgeInfo>>() {}.getType());
-        System.out.println(judgeInfoList);
         questionSubmitVO.setJudgeInfoList(judgeInfoList);
         return questionSubmitVO;
     }

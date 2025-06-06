@@ -2,5 +2,5 @@ server:
   port: 8082
 docker:
   imageName: openjdk:8-jre-alpine
-  firstInitImage: true
-  PreContainers: 1 # 预创建容器数
+  firstInitImage: false
+  PreContainers: 50 # 预创建容器数

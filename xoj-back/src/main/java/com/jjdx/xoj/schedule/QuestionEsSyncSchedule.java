@@ -4,6 +4,7 @@ import com.jjdx.xoj.model.entity.Question;
 import com.jjdx.xoj.service.Es.QuestionEsService;
 import com.jjdx.xoj.service.QuestionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class QuestionEsSyncSchedule {
+public class QuestionEsSyncSchedule implements CommandLineRunner {
 
     @Resource
     private QuestionService questionService;
@@ -44,7 +45,14 @@ public class QuestionEsSyncSchedule {
         List<Question> questions = questionService.list();
         if (!questions.isEmpty()) {
             questionEsService.saveAllQuestionsEs(questions);
-            log.info("Full sync completed, {} questions synchronized", questions.size());
+            log.info("全量更新完成, 数量:{} ", questions.size());
         }
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        //log.info("全量更新Es...");
+        //fullSync();
+        //log.info("全量更新Es完成");
     }
 }
